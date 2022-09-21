@@ -1,0 +1,33 @@
+version: "3.9"
+
+networks:
+  dockerapi-dev:
+    driver: bridge 
+
+services:
+    api:
+        build: ./HappyX.Api/.
+        ports:
+            - "8082:8080"
+        depends_on:
+            - db
+    db:
+        image: postgres:latest
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        ports:
+            - '5432:5432'
+        volumes:
+            - db_volume:/var/lib/postgresql/data
+            - ./dbscripts/seed.sql :/docker-entrypoint-initdb.d/seed.sql
+
+    web:
+        build: ./HappyX.Web/.
+        ports:
+            - "8081:80" 
+
+
+volumes:
+  db_volume:
