@@ -6,12 +6,14 @@ networks:
 
 services:
     api:
+        container_name: api
         build: ./HappyX.Api/.
         ports:
-            - "8082:8080"
+            - "8083:8080"
         depends_on:
             - db
     db:
+        container_name: db
         image: postgres:latest
         restart: always
         environment:
@@ -24,13 +26,15 @@ services:
             - ./dbscripts/seed.sql :/docker-entrypoint-initdb.d/seed.sql
 
     web:
+        container_name: web
         build: ./HappyX.Web/.
         ports:
-            - "8081:80" 
+            - "80:80"
     bot:
+        container_name: bot
         build: ./HappyX.Bot/.
         ports:
-            - "8083:80" 
+            - "8084:80" 
 
 volumes:
   db_volume:
