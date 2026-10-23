@@ -6,4 +6,4 @@
 	url = https://github.com/moixblau/HappyX.Bot
 [submodule "HappyX.Api"]
 	path = HappyX.Api
-	url = https://github.com/WoltersoderWolltersnicht/HappyX.Api
+	url = https://github.com/moixblau/HappyX.Api
