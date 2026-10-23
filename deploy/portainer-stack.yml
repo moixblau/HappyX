@@ -10,6 +10,13 @@
 # Optional:
 #   HAPPYX_TAG          image tag to deploy (default: latest; e.g. 1.0.0 or sha-abc1234)
 #   API_PORT            host port for the API (default: 8083)
+#   BACKUP_DIR          host folder for the database backups (default: the db_backups volume).
+#                       The backup container runs as uid 999: run `chown -R 999:999 <folder>`.
+#
+# Backups: every night the backup service dumps the database to /backups, keeping 7 daily,
+# 4 weekly and 6 monthly copies. To restore one (this replaces the current data):
+#   docker exec -i <db container> psql -U happyx -d happyx -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
+#   gunzip -c <backup>.sql.gz | docker exec -i <db container> psql -U happyx -d happyx
 
 services:
   db:
@@ -49,5 +56,25 @@ services:
     depends_on:
       - api
 
+  backup:
+    image: prodrigestivill/postgres-backup-local:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: happyx
+      POSTGRES_USER: happyx
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      TZ: Europe/Madrid
+    volumes:
+      - ${BACKUP_DIR:-db_backups}:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db_data:
+  db_backups:
