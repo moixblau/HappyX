@@ -44,3 +44,22 @@ every merge to `main` (`latest`, `sha-<commit>`) and on `v*` tags (`1.2.3`).
 The images are public if the GHCR packages are public (GitHub > your profile > Packages >
 happyx-api / happyx-bot / happyx-web > Package settings > Change visibility). If you keep them private, add
 `ghcr.io` under **Registries** in Portainer with a GitHub token that has `read:packages`.
+
+### Upgrading from Postgres 17 to 18
+
+A new major version cannot read the old data files, so the stack now uses a new volume
+(`db_data_pg18`) and the data is moved with a dump. The old `db_data` volume is left untouched,
+so going back is just redeploying the previous stack file.
+
+1. Before redeploying, dump the running database:
+   `docker exec <db container> pg_dump -U happyx -d happyx | gzip > happyx-pg17.sql.gz`
+   (the latest file in the backups folder works too).
+2. Redeploy the stack with the new `deploy/portainer-stack.yml`. Postgres 18 starts empty and the
+   API creates the tables.
+3. Stop the `api` and `bot` containers, then restore:
+   `docker exec -i <db container> psql -U happyx -d happyx -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'`
+   `gunzip -c happyx-pg17.sql.gz | docker exec -i <db container> psql -U happyx -d happyx`
+4. Start `api` and `bot` again. Once everything looks right, delete the old `db_data` volume.
+
+For local development, the same applies to `docker compose`: dump, `docker compose up -d`,
+restore. Or start from an empty database.
