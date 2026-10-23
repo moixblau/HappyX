@@ -1,5 +1,5 @@
 # HappyX stack for Portainer (Stacks > Add stack). Uses the images published to GHCR by the
-# HappyX.Api and HappyX.Bot workflows, so nothing is built on the server.
+# HappyX.Api, HappyX.Bot and HappyX.Web workflows, so nothing is built on the server.
 #
 # Set these in the stack's "Environment variables" section (never commit them); the stack
 # refuses to start if any is missing:
@@ -7,9 +7,18 @@
 #   API_KEY_HASHES      SHA-256 hash(es) of the API keys, comma separated
 #   DISCORD_TOKEN       Discord bot token
 #   BOT_API_KEY         the bot's API key (its hash must be in API_KEY_HASHES)
+# For the web dashboard (it works without them, but nobody can log in):
+#   WEB_URL             public URL of the dashboard, e.g. https://happyx.example.com
+#   DISCORD_CLIENT_ID   Discord application > OAuth2 > Client ID
+#   DISCORD_CLIENT_SECRET  Discord application > OAuth2 > Client Secret
+#   SESSION_SECRET      signs login sessions; generate with `openssl rand -hex 32`
+#   In Discord application > OAuth2 > Redirects, add <WEB_URL>/api/web/auth/callback.
 # Optional:
 #   HAPPYX_TAG          image tag to deploy (default: latest; e.g. 1.0.0 or sha-abc1234)
-#   API_PORT            host port for the API (default: 8083)
+#   WEB_PORT            host port for the dashboard (default: 8084). Put your HTTPS reverse
+#                       proxy in front of it; only the dashboard needs to be public.
+#   API_PORT            host port for the API (default: 8083). Nothing outside the stack needs
+#                       it: the bot and the dashboard reach the API on the internal network.
 #   BACKUP_DIR          host folder for the database backups (default: the db_backups volume).
 #                       The backup container runs as uid 999: run `chown -R 999:999 <folder>`.
 #
@@ -40,6 +49,10 @@ services:
     environment:
       DATABASE_URL: postgres://happyx:${POSTGRES_PASSWORD}@db:5432/happyx?sslmode=disable
       API_KEY_HASHES: ${API_KEY_HASHES:?}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      WEB_URL: ${WEB_URL:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
     ports:
       - "${API_PORT:-8083}:8080"
     depends_on:
@@ -53,6 +66,16 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN:?}
       API_URL: http://api:8080
       API_KEY: ${BOT_API_KEY:?}
+    depends_on:
+      - api
+
+  web:
+    image: ghcr.io/moixblau/happyx-web:${HAPPYX_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8080
+    ports:
+      - "${WEB_PORT:-8084}:8080"
     depends_on:
       - api
 
