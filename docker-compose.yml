@@ -1,5 +1,5 @@
 # Copy .env.example to .env and fill in the values before running `docker compose up`.
-# The web (HappyX.Web) will be added back once it is rewritten.
+# The dashboard is at http://localhost:8084.
 
 services:
   db:
@@ -26,6 +26,10 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
       API_KEY_HASHES: ${API_KEY_HASHES}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      WEB_URL: ${WEB_URL:-http://localhost:8084}
+      SESSION_SECRET: ${SESSION_SECRET:-}
     ports:
       - "8083:8080"
     depends_on:
@@ -39,6 +43,16 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       API_URL: http://api:8080
       API_KEY: ${BOT_API_KEY}
+    depends_on:
+      - api
+
+  web:
+    build: ./HappyX.Web
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8080
+    ports:
+      - "8084:8080"
     depends_on:
       - api
 
