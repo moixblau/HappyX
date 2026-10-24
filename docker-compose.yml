@@ -43,6 +43,7 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       API_URL: http://api:8080
       API_KEY: ${BOT_API_KEY}
+      WEB_URL: ${WEB_URL:-http://localhost:8084}
     depends_on:
       - api
 

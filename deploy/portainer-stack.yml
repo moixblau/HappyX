@@ -8,7 +8,8 @@
 #   DISCORD_TOKEN       Discord bot token
 #   BOT_API_KEY         the bot's API key (its hash must be in API_KEY_HASHES)
 # For the web dashboard (it works without them, but nobody can log in):
-#   WEB_URL             public URL of the dashboard, e.g. https://happyx.example.com
+#   WEB_URL             public URL of the dashboard, e.g. https://happyx.example.com (the bot
+#                       also uses it to link members to the «Who's who?» game)
 #   DISCORD_CLIENT_ID   Discord application > OAuth2 > Client ID
 #   DISCORD_CLIENT_SECRET  Discord application > OAuth2 > Client Secret
 #   SESSION_SECRET      signs login sessions; generate with `openssl rand -hex 32`
@@ -67,6 +68,7 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN:?}
       API_URL: http://api:8080
       API_KEY: ${BOT_API_KEY:?}
+      WEB_URL: ${WEB_URL:-}
     depends_on:
       - api
 
