@@ -9,17 +9,17 @@
 A Discord bot that asks your team how they feel every working day, anonymously,
 and turns the answers into reports and charts the admin can actually read.
 
-[![Self-hosted](https://img.shields.io/badge/self--hosted-Docker-8b5cf6?style=flat-square)](#self-host-with-portainer)
+[![Self-hosted](https://img.shields.io/badge/self--hosted-Docker-8b5cf6?style=flat-square)](#self-host)
 [![Discord bot](https://img.shields.io/badge/Discord-bot-5865F2?style=flat-square&logo=discord&logoColor=white)](https://github.com/happyx-app/HappyX.Bot)
 [![Go](https://img.shields.io/badge/Go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](https://github.com/happyx-app/HappyX.Api)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Vite-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://github.com/happyx-app/HappyX.Web)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat-square&logo=postgresql&logoColor=white)](deploy/portainer-stack.yml)
-[![Docker](https://img.shields.io/badge/images-GHCR-fbbf24?style=flat-square&logo=docker&logoColor=white)](#self-host-with-portainer)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat-square&logo=postgresql&logoColor=white)](deploy/stack.yml)
+[![Docker](https://img.shields.io/badge/images-GHCR-fbbf24?style=flat-square&logo=docker&logoColor=white)](#self-host)
 
 [Features](#features) ·
 [Screenshots](#screenshots) ·
 [Architecture](#architecture) ·
-[Self-host](#self-host-with-portainer) ·
+[Self-host](#self-host) ·
 [Development](#run-it-locally)
 
 <br>
@@ -130,7 +130,7 @@ dashboard English and Spanish. Adding a language is one JSON file.
 <td valign="top">
 
 ### 💾 Easy to run
-Three small Docker images on GHCR (amd64 and arm64), one Portainer stack, and nightly Postgres
+Three small Docker images on GHCR (amd64 and arm64), one Compose file, and nightly Postgres
 backups with rotation.
 
 </td>
@@ -175,7 +175,7 @@ flowchart LR
     members(["👥 Members"]) <-- "DM survey,<br>slash commands" --> discord["Discord"]
     people(["🧑‍💼 Admins and members"]) -- "HTTPS" --> web
     discord <--> bot
-    subgraph stack["Docker stack · Portainer"]
+    subgraph stack["Docker stack"]
         bot["🤖 HappyX.Bot<br>Go"] -- "/v1 · API key" --> api["⚙️ HappyX.Api<br>Go · clean architecture"]
         web["🌐 HappyX.Web<br>TypeScript · nginx"] -- "/api/web · session" --> api
         api --> db[("🐘 PostgreSQL")]
@@ -189,30 +189,71 @@ to one origin.
 
 | Repository | What it is |
 | --- | --- |
-| **[HappyX](https://github.com/happyx-app/HappyX)** | This repo: the stack (Docker Compose and Portainer), with the others as submodules |
+| **[HappyX](https://github.com/happyx-app/HappyX)** | This repo: docs, screenshots and the Compose files to run HappyX. No application code: Api, Bot and Web are git submodules |
 | [HappyX.Api](https://github.com/happyx-app/HappyX.Api) | Go REST API on PostgreSQL. Multi-server isolation, anonymity rules, reports, game, GDPR |
 | [HappyX.Bot](https://github.com/happyx-app/HappyX.Bot) | Go Discord bot: daily survey by DM, slash commands, report images, kudos, game DMs |
 | [HappyX.Web](https://github.com/happyx-app/HappyX.Web) | TypeScript dashboard without a framework, built with Vite and served by nginx. Charts are plain SVG |
-| [HappyX.Bruno](https://github.com/happyx-app/HappyX.Bruno) | [Bruno](https://www.usebruno.com/) collection with every API call |
+| [HappyX.Bruno](https://github.com/happyx-app/HappyX.Bruno) | [Bruno](https://www.usebruno.com/) collection with every API call. A separate tool, not a submodule |
 
 Each component's README goes into the details: the API's routes, anonymity rules and credentials,
 the bot's commands and how to add a language, the dashboard's screens and who sees what.
 
-## Self-host with Portainer
+## Self-host
 
-The HappyX.Api, HappyX.Bot and HappyX.Web workflows publish multi-arch images (amd64 and arm64) to
-GHCR on every merge to `main` (`latest`, `sha-<commit>`) and on `v*` tags (`1.2.3`):
-`ghcr.io/happyx-app/happyx-api`, `ghcr.io/happyx-app/happyx-bot` and `ghcr.io/happyx-app/happyx-web`.
+### What you need
 
-1. Create the Discord application (see [Setting up the Discord application](https://github.com/happyx-app/HappyX.Bot#setting-up-the-discord-application)
-   in HappyX.Bot). It needs the **Server Members** intent.
-2. In Portainer, go to **Stacks > Add stack > Repository**, use this repo and the compose path
-   `deploy/portainer-stack.yml`. Or paste that file into the web editor.
-3. Under **Environment variables**, set the variables below, and add
-   `<WEB_URL>/api/web/auth/callback` to the Discord application's OAuth2 redirects.
-4. Point your HTTPS reverse proxy at the dashboard's port (`WEB_PORT`,
-   default 8084). Only the dashboard needs to be public; the API's port can stay closed.
-5. Deploy. To update, use **Pull and redeploy** (with "Re-pull image" on).
+- A server with Docker Engine and Docker Compose v2 (amd64 or arm64). Portainer works too.
+- A domain for the dashboard, with HTTPS from a reverse proxy (Caddy, nginx, Traefik…).
+- A Discord application for the bot and the login (free).
+
+The API, the bot and the dashboard come as images on GHCR, published on every merge to `main`
+(`latest`, `sha-<commit>`) and on `v*` tags (`1.2.3`): `ghcr.io/happyx-app/happyx-api`,
+`ghcr.io/happyx-app/happyx-bot` and `ghcr.io/happyx-app/happyx-web`. They are public, so no
+registry login is needed. Postgres 18 and the backups come in the same stack, and the API creates
+and migrates its tables by itself when it starts.
+
+### Steps
+
+1. **Create the Discord application** (see [Setting up the Discord application](https://github.com/happyx-app/HappyX.Bot#setting-up-the-discord-application)
+   in HappyX.Bot). It needs the **Server Members** intent. Add
+   `<WEB_URL>/api/web/auth/callback` to its OAuth2 redirects.
+2. **Start the stack** with the [environment variables](#environment-variables) below.
+
+   With Docker Compose:
+
+   ```sh
+   mkdir happyx && cd happyx
+   curl -fsSLO https://raw.githubusercontent.com/happyx-app/HappyX/main/deploy/stack.yml
+   # create .env with the variables below, one VAR=value per line
+   docker compose -f stack.yml --env-file .env up -d
+   ```
+
+   With Portainer: **Stacks > Add stack > Repository**, this repo and the compose path
+   `deploy/stack.yml`, and the variables under **Environment variables**.
+3. **Put your HTTPS reverse proxy in front of the dashboard** (`WEB_PORT`, default 8084). Only the
+   dashboard needs to be public; the API's port stays on `127.0.0.1`. With Caddy on the same
+   server, for example:
+
+   ```
+   happyx.example.com {
+       reverse_proxy 127.0.0.1:8084
+   }
+   ```
+
+   The dashboard's nginx limits requests per visitor and trusts the proxy's `X-Forwarded-For`
+   only when the proxy connects from a private or loopback address (10/8, 172.16/12, 192.168/16,
+   127/8). A proxy on the same server or the same private network is fine; one reaching it from a
+   public IP would make every visitor count as one.
+4. **Add the bot to your server** with the **Add to Discord** button on the dashboard's landing
+   page (or the URL Generator, as in the bot's README). The server's owner becomes its HappyX
+   admin, who gets the reports; that can be changed later.
+5. **Adjust the defaults** with `/happyx config` or the dashboard's settings. A new server starts
+   anonymous, in English, with the survey Monday to Friday at 13:00 Europe/Madrid and a weekly
+   report.
+
+To update, run `docker compose -f stack.yml pull && docker compose -f stack.yml up -d`, or
+**Pull and redeploy** in Portainer (with "Re-pull image" on). Set `HAPPYX_TAG` to pin a version.
+Upgrading from an older stack? See [UPGRADING.md](UPGRADING.md).
 
 ### Environment variables
 
@@ -222,14 +263,15 @@ GHCR on every merge to `main` (`latest`, `sha-<commit>`) and on `v*` tags (`1.2.
 | `API_KEY_HASHES` | ✅ | SHA-256 hash(es) of the API keys, comma separated |
 | `DISCORD_TOKEN` | ✅ | Discord bot token |
 | `BOT_API_KEY` | ✅ | The bot's API key (its hash must be in `API_KEY_HASHES`) |
-| `WEB_URL` | for login | Public URL of the dashboard, e.g. `https://happyx.example.com` |
-| `DISCORD_CLIENT_ID` | for login | Discord application > OAuth2 > Client ID |
+| `WEB_URL` | for login | Public URL of the dashboard, e.g. `https://happyx.example.com`. The bot also links to it for the «Who's who?» game |
+| `DISCORD_CLIENT_ID` | for login | Discord application > OAuth2 > Client ID. Also enables the **Add to Discord** button |
 | `DISCORD_CLIENT_SECRET` | for login | Discord application > OAuth2 > Client Secret |
 | `SESSION_SECRET` | for login | Signs login sessions: `openssl rand -hex 32` |
 | `HAPPYX_TAG` | | Image tag to deploy (default `latest`; e.g. `1.0.0` or `sha-abc1234`) |
 | `WEB_PORT` | | Host port for the dashboard (default 8084) |
 | `API_PORT` | | Host port for the API, bound to 127.0.0.1 only (default 8083) |
 | `BACKUP_DIR` | | Host folder for backups (default: the `db_backups` volume; `chown -R 999:999` it) |
+| `TZ` | | Timezone of the nightly backup schedule and file names (default `UTC`) |
 
 To make an API key and its hash:
 
@@ -239,11 +281,6 @@ KEY=$(openssl rand -hex 32); echo "key:  $KEY"; echo -n "$KEY" | sha256sum
 
 Give the key to the client (`BOT_API_KEY`) and put only the hash in `API_KEY_HASHES`. See
 [HappyX.Api's README](https://github.com/happyx-app/HappyX.Api#credentials) for how API keys work.
-
-The images are public if the GHCR packages are public (the happyx-app organization > Packages >
-happyx-api / happyx-bot / happyx-web > Package settings > Change visibility). If you keep them
-private, add `ghcr.io` under **Registries** in Portainer with a GitHub token that has
-`read:packages`.
 
 ### Backups
 
@@ -255,35 +292,12 @@ docker exec -i <db container> psql -U happyx -d happyx -c 'DROP SCHEMA public CA
 gunzip -c <backup>.sql.gz | docker exec -i <db container> psql -U happyx -d happyx
 ```
 
-<details>
-<summary><b>Upgrading from Postgres 17 to 18</b></summary>
-
-<br>
-
-A new major version cannot read the old data files, so the stack now uses a new volume
-(`db_data_pg18`) and the data is moved with a dump. The old `db_data` volume is left untouched,
-so going back is just redeploying the previous stack file.
-
-1. Before redeploying, dump the running database:
-   `docker exec <db container> pg_dump -U happyx -d happyx | gzip > happyx-pg17.sql.gz`
-   (the latest file in the backups folder works too).
-2. Redeploy the stack with the new `deploy/portainer-stack.yml`. Postgres 18 starts empty and the
-   API creates the tables.
-3. Stop the `api` and `bot` containers, then restore:
-   `docker exec -i <db container> psql -U happyx -d happyx -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'`
-   `gunzip -c happyx-pg17.sql.gz | docker exec -i <db container> psql -U happyx -d happyx`
-4. Start `api` and `bot` again. Once everything looks right, delete the old `db_data` volume.
-
-For local development, the same applies to `docker compose`: dump, `docker compose up -d`,
-restore. Or start from an empty database.
-
-</details>
-
 ## Run it locally
 
 ```sh
 git clone --recurse-submodules https://github.com/happyx-app/HappyX
 cd HappyX
+git submodule update --remote   # move Api, Bot and Web to the latest main
 cp .env.example .env   # fill in a password, the Discord token and the bot's API key + its hash
 docker compose up -d --build
 curl localhost:8083/health
@@ -295,14 +309,26 @@ The dashboard is at http://localhost:8084. To log in, fill the `DISCORD_CLIENT_*
 
 Secrets live only in `.env`, which is git-ignored.
 
+`docker-compose.yml` builds the three images from the submodules, for development. To run HappyX
+for real, use `deploy/stack.yml` as in [Self-host](#self-host).
+
 Working on one piece? Each repo has its own development notes: `go test ./...` in the API and
 the bot, `npm test` and `npm run dev` in the web, and `go run ./cmd/preview` in the bot renders
 every message it sends as a Discord-styled page, no Discord server needed.
+
+## Contributing
+
+Ideas, bugs and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for which repo
+each change goes in.
+
+## License
+
+[MIT](LICENSE), like every HappyX repository.
 
 <br>
 
 <div align="center">
 <img src="docs/images/logo.svg" alt="" width="40" height="40">
 <br>
-<sub>Made with 💜 · <a href="#self-host-with-portainer">Host your own</a></sub>
+<sub>Made with 💜 · <a href="#self-host">Host your own</a></sub>
 </div>
