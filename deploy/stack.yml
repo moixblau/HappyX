@@ -35,6 +35,13 @@ services:
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
       WEB_URL: ${WEB_URL:-}
       SESSION_SECRET: ${SESSION_SECRET:-}
+      # The admin API (port 8081) is off until ADMIN_KEY_HASH is set; only the admin service uses it.
+      ADMIN_KEY_HASH: ${ADMIN_KEY_HASH:-}
+      ADMIN_ADDR: ":8081"
+      BACKUP_DIR: /backups
+    volumes:
+      # Read only, so the admin dashboard can list the latest backups.
+      - ${BACKUP_DIR:-db_backups}:/backups:ro
     # 127.0.0.1 only: the bot and the dashboard use the internal network, and publishing it would
     # expose the bot's /v1 API behind just the API key.
     ports:
@@ -61,6 +68,19 @@ services:
       API_URL: http://api:8080
     ports:
       - "${WEB_PORT:-8084}:8080"
+    depends_on:
+      - api
+
+  # Owner-only dashboard with counts across all servers. Keep it on the local network: do not
+  # route it through a tunnel or reverse proxy. Its nginx also refuses non-private addresses.
+  admin:
+    image: ghcr.io/happyx-app/happyx-admin:${HAPPYX_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8081
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+    ports:
+      - "${ADMIN_PORT:-8090}:8080"
     depends_on:
       - api
 
