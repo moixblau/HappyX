@@ -48,7 +48,7 @@ services:
       retries: 10
 
   api:
-    image: ghcr.io/moixblau/happyx-api:${HAPPYX_TAG:-latest}
+    image: ghcr.io/happyx-app/happyx-api:${HAPPYX_TAG:-latest}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://happyx:${POSTGRES_PASSWORD}@db:5432/happyx?sslmode=disable
@@ -64,7 +64,7 @@ services:
         condition: service_healthy
 
   bot:
-    image: ghcr.io/moixblau/happyx-bot:${HAPPYX_TAG:-latest}
+    image: ghcr.io/happyx-app/happyx-bot:${HAPPYX_TAG:-latest}
     restart: unless-stopped
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN:?}
@@ -75,7 +75,7 @@ services:
       - api
 
   web:
-    image: ghcr.io/moixblau/happyx-web:${HAPPYX_TAG:-latest}
+    image: ghcr.io/happyx-app/happyx-web:${HAPPYX_TAG:-latest}
     restart: unless-stopped
     environment:
       API_URL: http://api:8080
