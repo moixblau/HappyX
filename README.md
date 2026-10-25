@@ -5,14 +5,14 @@ optional message), and the server admin gets a weekly or monthly report.
 
 | Repo | Status |
 | --- | --- |
-| [HappyX.Api](https://github.com/moixblau/HappyX.Api) | Go + PostgreSQL REST API, multi-server |
-| [HappyX.Bot](https://github.com/moixblau/HappyX.Bot) | Go Discord bot: daily survey by DM, reports to the admin |
-| [HappyX.Web](https://github.com/moixblau/HappyX.Web) | TypeScript dashboard: Discord login, mood charts and reports per server |
+| [HappyX.Api](https://github.com/happyx-app/HappyX.Api) | Go + PostgreSQL REST API, multi-server |
+| [HappyX.Bot](https://github.com/happyx-app/HappyX.Bot) | Go Discord bot: daily survey by DM, reports to the admin |
+| [HappyX.Web](https://github.com/happyx-app/HappyX.Web) | TypeScript dashboard: Discord login, mood charts and reports per server |
 
 ## Run locally
 
 ```sh
-git clone --recurse-submodules https://github.com/moixblau/HappyX
+git clone --recurse-submodules https://github.com/happyx-app/HappyX
 cd HappyX
 cp .env.example .env   # fill in a password, the Discord token and the bot's API key + its hash
 docker compose up -d --build
