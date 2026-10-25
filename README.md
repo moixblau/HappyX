@@ -9,14 +9,13 @@
 A Discord bot that asks your team how they feel every working day, anonymously,
 and turns the answers into reports and charts the admin can actually read.
 
-[![Live](https://img.shields.io/badge/live-happyx.joanbe.net-8b5cf6?style=flat-square)](https://happyx.joanbe.net)
-[![Discord bot](https://img.shields.io/badge/Discord-bot-5865F2?style=flat-square&logo=discord&logoColor=white)](https://happyx.joanbe.net)
+[![Self-hosted](https://img.shields.io/badge/self--hosted-Docker-8b5cf6?style=flat-square)](#self-host-with-portainer)
+[![Discord bot](https://img.shields.io/badge/Discord-bot-5865F2?style=flat-square&logo=discord&logoColor=white)](https://github.com/happyx-app/HappyX.Bot)
 [![Go](https://img.shields.io/badge/Go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](https://github.com/happyx-app/HappyX.Api)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Vite-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://github.com/happyx-app/HappyX.Web)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat-square&logo=postgresql&logoColor=white)](deploy/portainer-stack.yml)
 [![Docker](https://img.shields.io/badge/images-GHCR-fbbf24?style=flat-square&logo=docker&logoColor=white)](#self-host-with-portainer)
 
-[Website](https://happyx.joanbe.net) ·
 [Features](#features) ·
 [Screenshots](#screenshots) ·
 [Architecture](#architecture) ·
@@ -305,5 +304,5 @@ every message it sends as a Discord-styled page, no Discord server needed.
 <div align="center">
 <img src="docs/images/logo.svg" alt="" width="40" height="40">
 <br>
-<sub>Made with 💜 by <a href="https://github.com/moixblau">Joan</a> · <a href="https://happyx.joanbe.net">happyx.joanbe.net</a></sub>
+<sub>Made with 💜 · <a href="#self-host-with-portainer">Host your own</a></sub>
 </div>
