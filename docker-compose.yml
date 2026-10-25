@@ -31,7 +31,7 @@ services:
       WEB_URL: ${WEB_URL:-http://localhost:8084}
       SESSION_SECRET: ${SESSION_SECRET:-}
     ports:
-      - "8083:8080"
+      - "127.0.0.1:8083:8080" # local only: the bot and web use the internal network
     depends_on:
       db:
         condition: service_healthy
