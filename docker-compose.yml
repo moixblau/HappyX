@@ -30,6 +30,8 @@ services:
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
       WEB_URL: ${WEB_URL:-http://localhost:8084}
       SESSION_SECRET: ${SESSION_SECRET:-}
+      ADMIN_KEY_HASH: ${ADMIN_KEY_HASH:-}
+      ADMIN_ADDR: ":8081"
     ports:
       - "127.0.0.1:8083:8080" # local only: the bot and web use the internal network
     depends_on:
@@ -54,6 +56,17 @@ services:
       API_URL: http://api:8080
     ports:
       - "8084:8080"
+    depends_on:
+      - api
+
+  admin:
+    build: ./HappyX.Admin
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8081
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+    ports:
+      - "127.0.0.1:8090:8080" # owner-only dashboard: http://localhost:8090
     depends_on:
       - api
 

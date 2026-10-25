@@ -7,3 +7,6 @@
 [submodule "HappyX.Api"]
 	path = HappyX.Api
 	url = https://github.com/happyx-app/HappyX.Api
+[submodule "HappyX.Admin"]
+	path = HappyX.Admin
+	url = https://github.com/happyx-app/HappyX.Admin

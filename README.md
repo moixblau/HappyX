@@ -180,19 +180,23 @@ flowchart LR
         web["🌐 HappyX.Web<br>TypeScript · nginx"] -- "/api/web · session" --> api
         api --> db[("🐘 PostgreSQL")]
         backup["💾 Nightly backups"] --> db
+        admin["📊 HappyX.Admin<br>TypeScript · nginx"] -- "/admin · admin key" --> api
     end
+    owner(["🔐 Owner, local network"]) --> admin
 ```
 
 Only the dashboard is public. The bot talks to Discord outbound, and the API stays on the stack's
 internal network: nginx in HappyX.Web forwards `/api/web/*` to it, so the browser only ever talks
-to one origin.
+to one origin. HappyX.Admin is an owner-only dashboard for the local network: it shows counts
+across all servers (never moods, messages or names) through a separate admin port of the API.
 
 | Repository | What it is |
 | --- | --- |
-| **[HappyX](https://github.com/happyx-app/HappyX)** | This repo: docs, screenshots and the Compose files to run HappyX. No application code: Api, Bot and Web are git submodules |
+| **[HappyX](https://github.com/happyx-app/HappyX)** | This repo: docs, screenshots and the Compose files to run HappyX. No application code: Api, Bot, Web and Admin are git submodules |
 | [HappyX.Api](https://github.com/happyx-app/HappyX.Api) | Go REST API on PostgreSQL. Multi-server isolation, anonymity rules, reports, game, GDPR |
 | [HappyX.Bot](https://github.com/happyx-app/HappyX.Bot) | Go Discord bot: daily survey by DM, slash commands, report images, kudos, game DMs |
 | [HappyX.Web](https://github.com/happyx-app/HappyX.Web) | TypeScript dashboard without a framework, built with Vite and served by nginx. Charts are plain SVG |
+| [HappyX.Admin](https://github.com/happyx-app/HappyX.Admin) | Owner-only dashboard for the local network: servers, usage, deliveries, health and backups. Counts only |
 | [HappyX.Bruno](https://github.com/happyx-app/HappyX.Bruno) | [Bruno](https://www.usebruno.com/) collection with every API call. A separate tool, not a submodule |
 
 Each component's README goes into the details: the API's routes, anonymity rules and credentials,
@@ -244,10 +248,15 @@ and migrates its tables by itself when it starts.
    only when the proxy connects from a private or loopback address (10/8, 172.16/12, 192.168/16,
    127/8). A proxy on the same server or the same private network is fine; one reaching it from a
    public IP would make every visitor count as one.
-4. **Add the bot to your server** with the **Add to Discord** button on the dashboard's landing
+4. **Optional: the admin dashboard** (`ADMIN_PORT`, default 8090) is for whoever runs the
+   stack. Make a key just for it (as below, not one of `API_KEY_HASHES`), set `ADMIN_API_KEY` to
+   the key and `ADMIN_KEY_HASH` to its hash, and open `http://<server>:8090` from your local
+   network. Do not put it behind the public proxy: its nginx refuses non-private addresses anyway.
+   Without the key it only shows how to set it up, and the API keeps its admin port closed.
+5. **Add the bot to your server** with the **Add to Discord** button on the dashboard's landing
    page (or the URL Generator, as in the bot's README). The server's owner becomes its HappyX
    admin, who gets the reports; that can be changed later.
-5. **Adjust the defaults** with `/happyx config` or the dashboard's settings. A new server starts
+6. **Adjust the defaults** with `/happyx config` or the dashboard's settings. A new server starts
    anonymous, in English, with the survey Monday to Friday at 13:00 Europe/Madrid and a weekly
    report.
 
@@ -267,10 +276,13 @@ Upgrading from an older stack? See [UPGRADING.md](UPGRADING.md).
 | `DISCORD_CLIENT_ID` | for login | Discord application > OAuth2 > Client ID. Also enables the **Add to Discord** button |
 | `DISCORD_CLIENT_SECRET` | for login | Discord application > OAuth2 > Client Secret |
 | `SESSION_SECRET` | for login | Signs login sessions: `openssl rand -hex 32` |
+| `ADMIN_API_KEY` | for admin | The admin dashboard's key, given to the admin container |
+| `ADMIN_KEY_HASH` | for admin | SHA-256 hash of `ADMIN_API_KEY`. Opens the API's admin port; must differ from `API_KEY_HASHES` |
 | `HAPPYX_TAG` | | Image tag to deploy (default `latest`; e.g. `1.0.0` or `sha-abc1234`) |
 | `WEB_PORT` | | Host port for the dashboard (default 8084) |
+| `ADMIN_PORT` | | Host port for the admin dashboard, local network only (default 8090) |
 | `API_PORT` | | Host port for the API, bound to 127.0.0.1 only (default 8083) |
-| `BACKUP_DIR` | | Host folder for backups (default: the `db_backups` volume; `chown -R 999:999` it) |
+| `BACKUP_DIR` | | Host folder for backups (default: the `db_backups` volume; `chown -R 999:999` it). The API reads it, read only, to show the latest backups in the admin dashboard |
 | `TZ` | | Timezone of the nightly backup schedule and file names (default `UTC`) |
 
 To make an API key and its hash:
@@ -297,7 +309,7 @@ gunzip -c <backup>.sql.gz | docker exec -i <db container> psql -U happyx -d happ
 ```sh
 git clone --recurse-submodules https://github.com/happyx-app/HappyX
 cd HappyX
-git submodule update --remote   # move Api, Bot and Web to the latest main
+git submodule update --remote   # move Api, Bot, Web and Admin to the latest main
 cp .env.example .env   # fill in a password, the Discord token and the bot's API key + its hash
 docker compose up -d --build
 curl localhost:8083/health
@@ -306,14 +318,15 @@ curl localhost:8083/health
 The dashboard is at http://localhost:8084. To log in, fill the `DISCORD_CLIENT_*` and
 `SESSION_SECRET` variables in `.env` (see the comments there) and add
 `http://localhost:8084/api/web/auth/callback` to the Discord application's OAuth2 redirects.
+The admin dashboard is at http://localhost:8090 once `ADMIN_API_KEY` and `ADMIN_KEY_HASH` are set.
 
 Secrets live only in `.env`, which is git-ignored.
 
-`docker-compose.yml` builds the three images from the submodules, for development. To run HappyX
+`docker-compose.yml` builds the images from the submodules, for development. To run HappyX
 for real, use `deploy/stack.yml` as in [Self-host](#self-host).
 
 Working on one piece? Each repo has its own development notes: `go test ./...` in the API and
-the bot, `npm test` and `npm run dev` in the web, and `go run ./cmd/preview` in the bot renders
+the bot, `npm test` and `npm run dev` in the web and the admin dashboard, and `go run ./cmd/preview` in the bot renders
 every message it sends as a Discord-styled page, no Discord server needed.
 
 ## Contributing
