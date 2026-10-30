@@ -22,4 +22,4 @@ Not sure where something goes? Open an issue here.
   `npm test` in the web. Each repository's README has its development notes.
 - User-facing text goes through the locale files, in English first. Other languages can follow.
 
-By contributing you agree that your work is published under the [MIT License](LICENSE).
+By contributing you agree that your work is published under the [GNU AGPL-3.0](LICENSE) (MIT in HappyX.Bruno).

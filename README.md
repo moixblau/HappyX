@@ -334,9 +334,13 @@ every message it sends as a Discord-styled page, no Discord server needed.
 Ideas, bugs and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for which repo
 each change goes in.
 
+## How it's built
+
+HappyX is developed with AI assistance. Every change is reviewed and approved by the maintainer before it's merged.
+
 ## License
 
-[MIT](LICENSE), like every HappyX repository.
+[AGPL-3.0](LICENSE), like the API, the bot, the web and the admin dashboard. The [Bruno collection](https://github.com/happyx-app/HappyX.Bruno) stays under MIT. Versions published before 30 October 2026 (up to commit [`0ddc34e`](https://github.com/happyx-app/HappyX/tree/0ddc34e6d73d1037b4dee41da873661cd041e5b3)) remain available under the MIT License.
 
 <br>
 
